@@ -12,3 +12,10 @@
 (define-constant ERR_EXTENSION_NOT_ALLOWED (err u208))
 (define-constant ERR_VOTING_PERIOD_NOT_ENDED (err u209))
 (define-constant ERR_VOTING_THRESHOLD_NOT_MET (err u210))
+
+;; Configuration
+(define-constant EXTENSION_THRESHOLD u80) ;; 80% of the goal
+(define-constant MAX_EXTENSION_DAYS u45)
+(define-constant VOTING_PERIOD_DAYS u10)
+(define-constant MIN_VOTE_THRESHOLD_PERCENT u70) ;; 70% of votes must be in favor
+(define-constant MIN_VOTE_COUNT_THRESHOLD u15) ;; At least 15 votes required
