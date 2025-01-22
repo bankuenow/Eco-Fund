@@ -49,6 +49,18 @@
 
 (define-data-var project-nonce uint u0)
 
+;; Helper functions
+(define-read-only (project-exists (project-id uint))
+  (is-some (map-get? projects { project-id: project-id }))
+)
+
+(define-read-only (calculate-vote-percentage (votes-in-favor uint) (total-votes uint))
+  (if (is-eq total-votes u0)
+    u0
+    (/ (* votes-in-favor u100) total-votes)
+  )
+)
+
 ;; Submit a new project
 (define-public (submit-project (name (string-ascii 50)) (goal uint) (deadline uint))
   (let (
