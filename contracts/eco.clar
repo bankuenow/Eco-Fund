@@ -48,3 +48,57 @@
 )
 
 (define-data-var project-nonce uint u0)
+
+;; Submit a new project
+(define-public (submit-project (name (string-ascii 50)) (goal uint) (deadline uint))
+  (let (
+    (project-id (+ (var-get project-nonce) u1))
+    (name-length (len name))
+  )
+    (asserts! (> deadline block-height) ERR_DEADLINE_PASSED)
+    (asserts! (> goal u0) ERR_INSUFFICIENT_FUNDS)
+    (asserts! (and (> name-length u0) (<= name-length u50)) ERR_INVALID_INPUT)
+    (asserts! (is-none (map-get? projects { project-id: project-id })) ERR_ALREADY_EXISTS)
+    (map-set projects
+      { project-id: project-id }
+      { 
+        name: name, 
+        creator: tx-sender, 
+        goal: goal, 
+        deadline: deadline, 
+        total-raised: u0, 
+        is-active: true,
+        extensions-used: u0,
+        vote-end-time: (+ deadline (* VOTING_PERIOD_DAYS u144)),
+        total-votes: u0,
+        votes-in-favor: u0
+      }
+    )
+    (var-set project-nonce project-id)
+    (ok project-id)
+  )
+)
+
+;; Contribute to a project
+(define-public (contribute (project-id uint) (amount uint))
+  (let (
+    (project (unwrap! (map-get? projects { project-id: project-id }) ERR_NOT_FOUND))
+    (current-contribution (default-to { amount: u0 } (map-get? contributions { project-id: project-id, contributor: tx-sender })))
+  )
+    (asserts! (project-exists project-id) ERR_NOT_FOUND)
+    (asserts! (> amount u0) ERR_INSUFFICIENT_FUNDS)
+    (asserts! (get is-active project) ERR_UNAUTHORIZED)
+    (asserts! (<= block-height (get deadline project)) ERR_DEADLINE_PASSED)
+    (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
+    (map-set contributions
+      { project-id: project-id, contributor: tx-sender }
+      { amount: (+ (get amount current-contribution) amount) }
+    )
+    (map-set projects
+      { project-id: project-id }
+      (merge project { total-raised: (+ (get total-raised project) amount) })
+    )
+    (ok true)
+  )
+)
+
