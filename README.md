@@ -1,183 +1,194 @@
 # EcoFund: Decentralized Crowdfunding for Environmental Conservation
 
-EcoFund is a decentralized platform enabling individuals to contribute to and vote on environmental conservation projects. The platform uses smart contracts to manage funds and decision-making processes, ensuring transparency and community involvement in environmental initiatives.
+EcoFund is a decentralized crowdfunding platform built on the Stacks blockchain, designed to empower environmental conservation initiatives through transparent community-driven funding and governance.
 
-## Features
+## 🌟 Features
 
-- Decentralized crowdfunding for environmental conservation projects
-- Community-driven voting mechanism with 70% approval threshold
-- Transparent fund management through smart contracts
-- Extended voting period of 10 days for thorough project evaluation
-- Higher minimum vote count (15) for better community representation
-- Flexible deadline extensions up to 45 days
-- Project cancellation and refund mechanisms
+- **Decentralized Fundraising**: Secure, transparent crowdfunding using smart contracts
+- **Community Governance**: Democratic project approval with weighted voting system
+- **Flexible Timelines**: Extensible deadlines with community oversight
+- **Security First**: Multi-stage approval process with automated fund management
+- **Transparent Operations**: All actions recorded on-chain for full accountability
 
-## Smart Contract Overview
+## 🔧 Technical Specifications
 
-The core functionality of EcoFund is implemented in a Clarity smart contract with the following key features:
+### Smart Contract Parameters
+- Minimum Approval: 70% positive votes
+- Quorum Requirement: 15 minimum votes
+- Extension Threshold: 80% funding achieved
+- Maximum Extensions: 3 per project
+- Extension Period: Up to 45 days
+- Voting Duration: 10 days after funding deadline
 
-- 80% funding threshold for deadline extensions
-- Maximum of 3 deadline extensions
-- 70% minimum vote threshold for project approval
-- Minimum of 15 votes required for valid decisions
-- Automatic refund mechanism for failed projects
+### System Requirements
+- Stacks 2.4 or later
+- Clarinet 1.0 or later
+- Node.js v14+
+- NPM 6+
 
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- [Clarinet](https://github.com/hirosystems/clarinet): A Clarity runtime packaged as a command line tool
-- [Node.js](https://nodejs.org/) (v14 or later)
-- [Stacks Wallet](https://www.hiro.so/wallet) for interacting with the Stacks blockchain
+1. Install system dependencies:
+   ```bash
+   # Install Clarinet
+   curl -sL https://install.clarinet.co | sh
+
+   # Install Node.js & NPM
+   # Visit https://nodejs.org/ for installation
+   ```
+
+2. Install Stacks Wallet for transaction signing:
+   - [Hiro Wallet](https://www.hiro.so/wallet)
+   - [Xverse Wallet](https://www.xverse.app/)
 
 ### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/Eco-Fund.git
-   cd ecofund
-   ```
+```bash
+# Clone repository
+git clone https://github.com/yourusername/ecofund.git
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+# Navigate to project
+cd ecofund
 
-3. Deploy the smart contract:
-   ```bash
-   clarinet deploy
-   ```
+# Install dependencies
+npm install
 
-## Usage
+# Deploy contract (testnet)
+clarinet deploy --testnet
+```
 
-### Interacting with the Contract
+## 💡 Usage Guide
 
-1. Submit a conservation project:
-   ```clarity
-   (contract-call? .ecofund submit-project "Rainforest Conservation 2025" u1000000000 u31536000)
-   ```
+### Project Creation
 
-2. Contribute to a project:
-   ```clarity
-   (contract-call? .ecofund contribute u1 u100000000)
-   ```
+Create a new conservation project:
+```clarity
+(contract-call? .ecofund submit-project 
+    "Amazon Rainforest Protection" 
+    u1000000000 
+    u31536000)
+```
 
-3. Vote on a project:
-   ```clarity
-   (contract-call? .ecofund vote u1 true)
-   ```
+Required parameters:
+- Project name (max 50 chars)
+- Funding goal (in µSTX)
+- Duration (in blocks)
 
-4. Withdraw funds (project creators):
-   ```clarity
-   (contract-call? .ecofund withdraw-funds u1)
-   ```
+### Contributing
 
-5. Request a refund (contributors):
-   ```clarity
-   (contract-call? .ecofund refund u1)
-   ```
+Support a project:
+```clarity
+(contract-call? .ecofund contribute u1 u50000000)
+```
 
-6. Cancel a project (creators):
-   ```clarity
-   (contract-call? .ecofund cancel-project u1)
-   ```
+Parameters:
+- Project ID
+- Amount (in µSTX)
 
-7. Extend project deadline:
-   ```clarity
-   (contract-call? .ecofund extend-deadline u1 u32000000)
-   ```
+### Voting System
 
-## Project Lifecycle
+Cast your vote:
+```clarity
+(contract-call? .ecofund vote u1 true)
+```
 
-### Submission
+Key voting rules:
+- Only contributors can vote
+- Votes cannot be changed
+- 10-day voting window
+- 70% approval needed
 
-1. Project creators submit their environmental conservation proposals
-2. Each proposal includes:
-   - Project name (max 50 characters)
-   - Funding goal in STX
-   - Project deadline
-   - Detailed project description
+### Project Management
 
-### Funding
+For project creators:
+```clarity
+# Extend deadline
+(contract-call? .ecofund extend-deadline u1 u32000000)
 
-- Contributors can send STX to support projects
-- All funds are held in smart contract until conditions are met
-- Projects must reach 100% of goal for withdrawal
-- Automatic refunds if goal isn't reached
+# Cancel project (if no contributions)
+(contract-call? .ecofund cancel-project u1)
 
-### Voting
+# Withdraw funds (after successful vote)
+(contract-call? .ecofund withdraw-funds u1)
+```
 
-- 10-day voting period after funding deadline
-- Minimum 15 votes required for valid decision
-- 70% approval needed for fund release
-- All contributors can participate in voting
+For contributors:
+```clarity
+# Request refund (if project fails)
+(contract-call? .ecofund refund u1)
+```
 
-### Extensions
-
-Projects can receive deadline extensions if:
-- Current funding reaches 80% of goal
-- Extension request made before deadline
-- Extension period ≤ 45 days
-- Maximum 3 extensions per project
-
-## Security Features
-
-- Multi-stage approval process
-- Automated fund locking and release
-- Transparent voting mechanism
-- Built-in refund functionality
-- Deadline extension controls
-- Anti-spam measures
-
-## Development
+## 🧪 Development
 
 ### Testing
 
-Run the test suite:
 ```bash
+# Run all tests
 clarinet test
+
+# Run specific test file
+clarinet test tests/ecofund_test.ts
+
+# Check contract
+clarinet check
 ```
 
 ### Local Development
 
-Start local development environment:
 ```bash
+# Start REPL
 clarinet console
+
+# Deploy locally
+clarinet deploy --local
 ```
 
-## Contributing
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create your feature branch: `git checkout -b feature/YourFeature`
+3. Commit changes: `git commit -am 'Add YourFeature'`
+4. Push to branch: `git push origin feature/YourFeature`
+5. Submit a pull request
 
-### Coding Standards
+### Development Standards
 
-- Follow Clarity best practices
-- Include comprehensive tests
-- Document all functions
-- Update README for significant changes
+- Write comprehensive unit tests
+- Document all functions with clear descriptions
+- Follow [Clarity coding standards](https://docs.stacks.co/writing-smart-contracts/clarity-language/language-overview)
+- Update documentation for new features
 
+## 📈 Future Roadmap
 
-## Acknowledgments
-
-- Thanks to the Stacks community for their support
-- Inspired by global environmental conservation efforts
-- Built on Stacks blockchain technology
-
-## Support
-
-For support and questions:
-- Create an issue in the repository
-- Join our Discord community
-- Follow our Twitter for updates
-
-## Roadmap
-
-- Mobile application integration
+### Q2 2025
+- Multi-token support (SIP-010 tokens)
 - Enhanced voting mechanisms
-- Multiple token support
-- Cross-chain functionality
-- Impact tracking metrics
+- Mobile app integration
+
+### Q3 2025
+- Cross-chain bridge integration
+- Impact measurement metrics
+- DAO governance implementation
+
+### Q4 2025
+- Automated impact reporting
+- Advanced analytics dashboard
+- Multi-signature support
+
+## 🌐 Community
+
+- Discord: [Join our community](https://discord.gg/ecofund)
+- Twitter: [@EcoFund](https://twitter.com/ecofund)
+- Blog: [Medium](https://medium.com/ecofund)
+
+
+## 🙏 Acknowledgments
+
+- Stacks Foundation for technical support
+- Environmental conservation partners
+- Open-source contributors
+- Community members and early adopters
