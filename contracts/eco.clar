@@ -102,3 +102,66 @@
   )
 )
 
+;; Vote on a project
+(define-public (vote (project-id uint) (in-favor bool))
+  (let (
+    (project (unwrap! (map-get? projects { project-id: project-id }) ERR_NOT_FOUND))
+    (contribution (unwrap! (map-get? contributions { project-id: project-id, contributor: tx-sender }) ERR_UNAUTHORIZED))
+  )
+    (asserts! (project-exists project-id) ERR_NOT_FOUND)
+    (asserts! (get is-active project) ERR_UNAUTHORIZED)
+    (asserts! (<= block-height (get vote-end-time project)) ERR_DEADLINE_PASSED)
+    (asserts! (is-none (map-get? votes { project-id: project-id, voter: tx-sender })) ERR_ALREADY_EXISTS)
+    (map-set votes
+      { project-id: project-id, voter: tx-sender }
+      { in-favor: in-favor }
+    )
+    (map-set projects
+      { project-id: project-id }
+      (merge project {
+        total-votes: (+ (get total-votes project) u1),
+        votes-in-favor: (if in-favor (+ (get votes-in-favor project) u1) (get votes-in-favor project))
+      })
+    )
+    (ok true)
+  )
+)
+
+;; Withdraw funds (for project creators)
+(define-public (withdraw-funds (project-id uint))
+  (let (
+    (project (unwrap! (map-get? projects { project-id: project-id }) ERR_NOT_FOUND))
+  )
+    (asserts! (project-exists project-id) ERR_NOT_FOUND)
+    (asserts! (is-eq tx-sender (get creator project)) ERR_UNAUTHORIZED)
+    (asserts! (>= (get total-raised project) (get goal project)) ERR_GOAL_NOT_REACHED)
+    (asserts! (> block-height (get vote-end-time project)) ERR_VOTING_PERIOD_NOT_ENDED)
+    (asserts! (>= (get total-votes project) MIN_VOTE_COUNT_THRESHOLD) ERR_VOTING_THRESHOLD_NOT_MET)
+    (asserts! (>= (calculate-vote-percentage (get votes-in-favor project) (get total-votes project)) MIN_VOTE_THRESHOLD_PERCENT) ERR_VOTING_THRESHOLD_NOT_MET)
+    (try! (as-contract (stx-transfer? (get total-raised project) tx-sender (get creator project))))
+    (map-set projects
+      { project-id: project-id }
+      (merge project { is-active: false })
+    )
+    (ok true)
+  )
+)
+
+;; Refund (for contributors if a project fails)
+(define-public (refund (project-id uint))
+  (let (
+    (project (unwrap! (map-get? projects { project-id: project-id }) ERR_NOT_FOUND))
+    (contribution (unwrap! (map-get? contributions { project-id: project-id, contributor: tx-sender }) ERR_NOT_FOUND))
+  )
+    (asserts! (project-exists project-id) ERR_NOT_FOUND)
+    (asserts! (> block-height (get vote-end-time project)) ERR_VOTING_PERIOD_NOT_ENDED)
+    (asserts! (or
+      (< (get total-raised project) (get goal project))
+      (< (get total-votes project) MIN_VOTE_COUNT_THRESHOLD)
+      (< (calculate-vote-percentage (get votes-in-favor project) (get total-votes project)) MIN_VOTE_THRESHOLD_PERCENT)
+    ) ERR_UNAUTHORIZED)
+    (try! (as-contract (stx-transfer? (get amount contribution) tx-sender tx-sender)))
+    (map-delete contributions { project-id: project-id, contributor: tx-sender })
+    (ok true)
+  )
+)
