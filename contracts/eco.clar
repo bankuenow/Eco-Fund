@@ -19,3 +19,32 @@
 (define-constant VOTING_PERIOD_DAYS u10)
 (define-constant MIN_VOTE_THRESHOLD_PERCENT u70) ;; 70% of votes must be in favor
 (define-constant MIN_VOTE_COUNT_THRESHOLD u15) ;; At least 15 votes required
+
+;; Data Maps
+(define-map projects 
+  { project-id: uint } 
+  { 
+    name: (string-ascii 50), 
+    creator: principal, 
+    goal: uint, 
+    deadline: uint, 
+    total-raised: uint, 
+    is-active: bool,
+    extensions-used: uint,
+    vote-end-time: uint,
+    total-votes: uint,
+    votes-in-favor: uint
+  }
+)
+
+(define-map contributions 
+  { project-id: uint, contributor: principal } 
+  { amount: uint }
+)
+
+(define-map votes
+  { project-id: uint, voter: principal }
+  { in-favor: bool }
+)
+
+(define-data-var project-nonce uint u0)
