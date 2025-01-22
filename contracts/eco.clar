@@ -165,3 +165,47 @@
     (ok true)
   )
 )
+
+;; Cancel a project (for project creators)
+(define-public (cancel-project (project-id uint))
+  (let (
+    (project (unwrap! (map-get? projects { project-id: project-id }) ERR_NOT_FOUND))
+  )
+    (asserts! (project-exists project-id) ERR_NOT_FOUND)
+    (asserts! (is-eq tx-sender (get creator project)) ERR_UNAUTHORIZED)
+    (asserts! (get is-active project) ERR_UNAUTHORIZED)
+    (asserts! (<= block-height (get deadline project)) ERR_DEADLINE_PASSED)
+    (asserts! (is-eq (get total-raised project) u0) ERR_CONTRIBUTIONS_EXIST)
+    (map-set projects
+      { project-id: project-id }
+      (merge project { is-active: false })
+    )
+    (ok true)
+  )
+)
+
+;; Extend project deadline
+(define-public (extend-deadline (project-id uint) (new-deadline uint))
+  (let (
+    (project (unwrap! (map-get? projects { project-id: project-id }) ERR_NOT_FOUND))
+    (current-deadline (get deadline project))
+    (extension-days (/ (- new-deadline current-deadline) u144))
+  )
+    (asserts! (project-exists project-id) ERR_NOT_FOUND)
+    (asserts! (is-eq tx-sender (get creator project)) ERR_UNAUTHORIZED)
+    (asserts! (get is-active project) ERR_UNAUTHORIZED)
+    (asserts! (<= block-height current-deadline) ERR_DEADLINE_PASSED)
+    (asserts! (<= extension-days MAX_EXTENSION_DAYS) ERR_INVALID_INPUT)
+    (asserts! (>= (* (get total-raised project) u100) (* (get goal project) EXTENSION_THRESHOLD)) ERR_EXTENSION_NOT_ALLOWED)
+    (asserts! (< (get extensions-used project) u3) ERR_EXTENSION_NOT_ALLOWED)
+    (map-set projects
+      { project-id: project-id }
+      (merge project { 
+        deadline: new-deadline,
+        vote-end-time: (+ new-deadline (* VOTING_PERIOD_DAYS u144)),
+        extensions-used: (+ (get extensions-used project) u1)
+      })
+    )
+    (ok true)
+  )
+)
