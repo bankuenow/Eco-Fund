@@ -209,3 +209,31 @@
     (ok true)
   )
 )
+
+;; Read-only functions
+(define-read-only (get-project (project-id uint))
+  (map-get? projects { project-id: project-id })
+)
+
+(define-read-only (get-contribution (project-id uint) (contributor principal))
+  (map-get? contributions { project-id: project-id, contributor: contributor })
+)
+
+(define-read-only (get-vote (project-id uint) (voter principal))
+  (map-get? votes { project-id: project-id, voter: voter })
+)
+
+(define-read-only (get-voting-status (project-id uint))
+  (match (map-get? projects { project-id: project-id })
+    project (ok {
+      total-votes: (get total-votes project),
+      votes-in-favor: (get votes-in-favor project),
+      vote-percentage: (calculate-vote-percentage (get votes-in-favor project) (get total-votes project)),
+      threshold-met: (and
+        (>= (get total-votes project) MIN_VOTE_COUNT_THRESHOLD)
+        (>= (calculate-vote-percentage (get votes-in-favor project) (get total-votes project)) MIN_VOTE_THRESHOLD_PERCENT)
+      )
+    })
+    ERR_NOT_FOUND
+  )
+)
